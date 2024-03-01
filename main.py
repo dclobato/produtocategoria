@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, Uuid, String, DateTime, func, DECIMAL, Integer, Boolean, ForeignKey, Text
+from sqlalchemy import Column, Uuid, String, DateTime, func, DECIMAL, Integer, Boolean, ForeignKey
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import DeclarativeBase, relationship, Session
 
@@ -15,6 +15,7 @@ Editar o migrations/env.py linha 18 e 19 para
     from main import Base
     target_metadata = Base.metadata
 """
+
 
 class Base(DeclarativeBase):
     pass
