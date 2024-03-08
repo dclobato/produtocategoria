@@ -96,18 +96,67 @@ def listar_categorias():
     print(f"----------------------------------------- ----------")
 
 
+def seleciona_categoria():
+    nome_parcial = input("Digite uma parte do nome da categoria desejada: ")
+    stmt = select(Categoria).where(Categoria.nome.ilike(f"%{nome_parcial}%")).order_by("nome")
+    with Session(motor) as sessao:
+        rset = sessao.execute(stmt).scalars()
+        contador = 1
+        ids = list()
+        for categoria in rset:
+            print(f"{contador:3d} - {categoria.nome}")
+            ids.append(categoria.id)
+            contador = contador + 1
+        cod = int(input("Digite o numero da categoria desejada: "))
+        categoria = ids[cod - 1]
+    return categoria
+
+def alterar_categoria():
+    id_categoria = seleciona_categoria()
+    with Session(motor) as sessao:
+        categoria = sessao.get(Categoria, id_categoria)
+        print(f"Nome atual da categoria: {categoria.nome}")
+        novo_nome = input("Qual vai ser o novo nome: ")
+        categoria.nome = novo_nome
+        sessao.commit()
+    return
+
+
+def remover_categoria():
+    id_categoria = seleciona_categoria()
+    with Session(motor) as sessao:
+        categoria = sessao.get(Categoria, id_categoria)
+        print(f"ATENCAO!  Ao remover a categoria '{categoria.nome}' você vai "
+              f"remover, também, {len(categoria.lista_de_produtos)} produtos vinculados")
+        for produto in categoria.lista_de_produtos:
+            print(f"   - {produto.nome}")
+        resposta = input("Remove mesmo assim (S/N)?")
+        if resposta.upper() == "S":
+            sessao.delete(categoria)
+            sessao.commit()
+        else:
+            print("Mantendo a categoria no banco...")
+    return
+
+
 if __name__ == "__main__":
     seed_database()
     while True:
         print("Menu de opcoes")
         print("1. Incluir categoria")
         print("2. Listar categorias")
+        print("3. Alterar categoria")
+        print("4. Remover categoria")
         print("0. Sair")
         opcao = int(input("Qual opcao? "))
         if opcao == 1:
             incluir_categoria()
         elif opcao == 2:
             listar_categorias()
+        elif opcao == 3:
+            alterar_categoria()
+        elif opcao == 4:
+            remover_categoria()
         elif opcao == 0:
             exit(0)
         else:
