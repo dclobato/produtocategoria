@@ -7,8 +7,8 @@ from logica_negocio import categoria
 alembic init migrations
 Editar o alembic.ini com a string de conexao do banco
 Editar o migrations/env.py linha 18 e 19 para
-    from main import Base
-    target_metadata = Base.metadata
+    from models import base
+    target_metadata = base.Base.metadata
 alembic revision --autogenerate -m "Migracao inicial"
 alembic upgrade head
 """
