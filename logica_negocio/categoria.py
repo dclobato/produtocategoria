@@ -28,6 +28,11 @@ def listar(motor):
 
 
 def selecionar(motor):
+    """
+    Retorna o id de uma categoria selecionada
+    :param motor: motor de acesso ao banco
+    :return: uuid com o id da categoria
+    """
     nome_parcial = input("Digite uma parte do nome da categoria desejada: ")
     stmt = select(Categoria).where(Categoria.nome.ilike(f"%{nome_parcial}%")).order_by("nome")
     with Session(motor) as sessao:
