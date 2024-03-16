@@ -1,7 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from models import Produto
+
 from logica_negocio import categoria
+from models import Produto
+
 
 def incluir(motor):
     print("Incluir novo produto")
@@ -20,6 +22,7 @@ def incluir(motor):
         sessao.add(produto)
         sessao.commit()
         print(f"O produto {nome} foi adicionado")
+
 
 def selecionar(motor):
     """
@@ -41,6 +44,7 @@ def selecionar(motor):
         produto = ids[cod - 1]
     return produto
 
+
 def alterar(motor):
     id_produto = selecionar(motor)
     with Session(motor) as sessao:
@@ -58,3 +62,65 @@ def alterar(motor):
             produto.ativo = not produto.ativo
         sessao.commit()
         print("Produto alterado")
+
+
+def remover(motor):
+    id_produto = selecionar(motor)
+    with Session(motor) as sessao:
+        produto = sessao.get(Produto, id_produto)
+        confirma = input(f"Confirma a remoção do produto '{produto.nome}' (S/N)?")
+        if confirma[0].lower() == "s":
+            sessao.delete(produto)
+            sessao.commit()
+            print("Produto removido")
+
+
+def listar(motor):
+    print("Nome                                           Preco  Estoque  Ativo  Categoria")
+    print("----------------------------------------  ----------  -------  -----  ------ - -  -")
+    with Session(motor) as sessao:
+        sentenca = select(Produto).order_by(Produto.nome)
+        rset = sessao.execute(sentenca).scalars()
+        for produto in rset:
+            ativo = "S" if produto.ativo else "N"
+            print(f"{produto.nome[:40]:40s}  {produto.preco:10.2f}  {produto.estoque:7d}    "
+                  f"{ativo}    {produto.categoria.nome}")
+
+
+def sem_estoque(motor):
+    print("Nome                                           Preco  Estoque  Ativo  Categoria")
+    print("----------------------------------------  ----------  -------  -----  ------ - -  -")
+    with Session(motor) as sessao:
+        sentenca = select(Produto).where(Produto.estoque <= 0).order_by(Produto.nome)
+        rset = sessao.execute(sentenca).scalars()
+        for produto in rset:
+            ativo = "S" if produto.ativo else "N"
+            print(f"{produto.nome[:40]:40s}  {produto.preco:10.2f}  {produto.estoque:7d}    "
+                  f"{ativo}    {produto.categoria.nome}")
+
+
+def vender(motor):
+    id_produto = selecionar(motor)
+    with Session(motor) as sessao:
+        produto = sessao.get(Produto, id_produto)
+        print(f"No momento, {produto.estoque} unidades de {produto.nome} em estoque")
+        unidades = int(input("Venderemos quantas? "))
+        if unidades <= produto.estoque:
+            novo_estoque = produto.estoque - unidades
+            print(f"Vendendo {unidades} unidades e deixando {novo_estoque} no estoque")
+            produto.estoque = novo_estoque
+            sessao.commit()
+        else:
+            print("Nao temos estoque suficiente...")
+
+
+def comprar(motor):
+    id_produto = selecionar(motor)
+    with Session(motor) as sessao:
+        produto = sessao.get(Produto, id_produto)
+        print(f"No momento, {produto.estoque} unidades de {produto.nome} em estoque")
+        unidades = int(input("Compraremos quantas? "))
+        novo_estoque = produto.estoque + unidades
+        print(f"Comprando {unidades} unidades e deixando {novo_estoque} no estoque")
+        produto.estoque = novo_estoque
+        sessao.commit()
