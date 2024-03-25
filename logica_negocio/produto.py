@@ -1,5 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from rich.console import Console
+from rich.table import Table
+from rich import box
 
 from logica_negocio import categoria
 from models import Produto
@@ -76,16 +79,21 @@ def remover(motor):
 
 
 def listar(motor):
-    print("Nome                                           Preco  Estoque  Ativo  Categoria")
-    print("----------------------------------------  ----------  -------  -----  ------ - -  -")
+    tabela = Table(title="Lista de produtos", box=box.DOUBLE)
+    tabela.add_column("Nome", no_wrap=True)
+    tabela.add_column("Preco", justify="right")
+    tabela.add_column("Estoque", justify="right")
+    tabela.add_column("Ativo", justify="center")
+    tabela.add_column("Categoria")
     with Session(motor) as sessao:
         sentenca = select(Produto).order_by(Produto.nome)
         rset = sessao.execute(sentenca).scalars()
         for produto in rset:
             ativo = "S" if produto.ativo else "N"
-            print(f"{produto.nome[:40]:40s}  {produto.preco:10.2f}  {produto.estoque:7d}    "
-                  f"{ativo}    {produto.categoria.nome}")
+            tabela.add_row(produto.nome, f"{produto.preco:.2f}", f"{produto.estoque:d}", ativo, produto.categoria.nome)
 
+    console = Console(width=130)
+    console.print(tabela)
 
 def sem_estoque(motor):
     print("Nome                                           Preco  Estoque  Ativo  Categoria")
